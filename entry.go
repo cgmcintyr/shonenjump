@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -77,27 +76,28 @@ func (entries entryList) Filter(f func(*entry) bool) entryList {
 }
 
 func (entries entryList) Save(path string) {
-	tempfile, err := ioutil.TempFile("", "shonenjump")
+	if err := os.MkdirAll(filepath.Dir(path), 0740); err != nil {
+		log.Fatal(err)
+	}
+
+	tempfilePath := path + ".tmp"
+	tempfile, err := os.Create(tempfilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.Remove(tempfile.Name())
+	defer os.Remove(tempfilePath)
 
 	var buffer bytes.Buffer
 	for _, e := range entries {
 		buffer.WriteString(e.String() + "\n")
 	}
+
 	if _, err := tempfile.Write(buffer.Bytes()); err != nil {
 		log.Fatal(err)
 	}
-	if err := tempfile.Close(); err != nil {
+	if err = tempfile.Close(); err != nil {
 		log.Fatal(err)
 	}
-
-	if err = os.MkdirAll(filepath.Dir(path), 0740); err != nil {
-		log.Fatal(err)
-	}
-
 	if err = os.Rename(tempfile.Name(), path); err != nil {
 		log.Fatal(err)
 	}
