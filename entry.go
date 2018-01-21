@@ -99,7 +99,18 @@ func (entries entryList) Save(path string) {
 	}
 
 	if err = os.Rename(tempfile.Name(), path); err != nil {
-		log.Fatal(err)
+		dat, err := ioutil.ReadFile(tempfile.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		f, err := os.Create(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		if _, err := f.WriteString(string(dat)); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
